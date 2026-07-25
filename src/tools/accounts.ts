@@ -43,8 +43,14 @@ export async function createAccount(
     name: string;
     type: 'asset' | 'expense' | 'revenue' | 'liability';
     account_role?: 'defaultAsset' | 'sharedAsset' | 'savingAsset' | 'ccAsset' | 'cashWalletAsset';
+    credit_card_type?: 'monthlyFull' | null
+    monthly_payment_date?: string;
     currency_code?: string;
     iban?: string;
+    liability_type?: 'loan' | 'debt' | 'mortgage' | null 
+    liability_direction?: 'credit' | 'debit' | null
+    interest?: string;
+    interest_period?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'half-year' | 'yearly' | null;
     opening_balance?: string;
     opening_balance_date?: string;
     include_net_worth?: boolean;
@@ -61,7 +67,14 @@ export async function updateAccount(
   params: {
     name?: string;
     currency_code?: string;
+    credit_card_type?: 'monthlyFull' | null
+    monthly_payment_date?: string;
+    currency_code?: string;
     iban?: string;
+    liability_type?: 'loan' | 'debt' | 'mortgage' | null 
+    liability_direction?: 'credit' | 'debit' | null
+    interest?: string;
+    interest_period?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'half-year' | 'yearly' | null;
     opening_balance?: string;
     opening_balance_date?: string;
     include_net_worth?: boolean;
@@ -183,8 +196,26 @@ export function registerAccountTools(server: McpServer, client: FireflyClient): 
           .enum(['defaultAsset', 'sharedAsset', 'savingAsset', 'ccAsset', 'cashWalletAsset'])
           .optional()
           .describe('Role for asset accounts (required when type is asset)'),
+        credit_card_type: z
+          .enum(['monthlyFull'])
+          .optional()
+          .describe('Mandatory when the account_role is ccAsset. Can only be monthlyFull or null.'),
+        monthly_payment_date: z.dateSchema.optional().describe('Mandatory when the account_role is ccAsset. Moment at which CC payment installments are asked for by the bank. (YYYY-MM-DD)'),        
         currency_code: z.string().optional().describe('Currency code (e.g. EUR, USD)'),
         iban: z.string().optional().describe('IBAN number'),
+        liability_type: z
+          .enum(['loan', 'debt', 'mortgage'])
+          .optional()
+          .describe('Mandatory when type is liability. Specifies the exact type.'),
+        liability_direction: z
+          .enum(['credit', 'debit'])
+          .optional()
+          .describe('credit indicates somebody owes you the liability. debit Indicates you owe this debt yourself. Works only for liabilities.'),
+        interest: z.string().describe('Mandatory when type is liability. Interest percentage.'),
+        interest_period: z
+          .enum([ 'daily', 'weekly', 'monthly', 'quarterly', 'half-year', 'yearly' ])
+          .optional()
+          .describe('Mandatory when type is liability. Period over which the interest is calculated.')
         opening_balance: z.string().optional().describe('Opening balance as a number string'),
         opening_balance_date: dateSchema.optional().describe('Opening balance date (YYYY-MM-DD)'),
         include_net_worth: z.boolean().optional().describe('Include in net worth calculations'),
@@ -206,7 +237,25 @@ export function registerAccountTools(server: McpServer, client: FireflyClient): 
         id: accountIdSchema,
         name: z.string().optional().describe('Account name'),
         currency_code: z.string().optional().describe('Currency code (e.g. EUR, USD)'),
+        credit_card_type: z
+          .enum(['monthlyFull'])
+          .optional()
+          .describe('Mandatory when the account_role is ccAsset. Can only be monthlyFull or null.'),
+        monthly_payment_date: z.dateSchema.optional().describe('Mandatory when the account_role is ccAsset. Moment at which CC payment installments are asked for by the bank. (YYYY-MM-DD)'),        
         iban: z.string().optional().describe('IBAN number'),
+                liability_type: z
+          .enum(['loan', 'debt', 'mortgage'])
+          .optional()
+          .describe('Mandatory when type is liability. Specifies the exact type.'),
+        liability_direction: z
+          .enum(['credit', 'debit'])
+          .optional()
+          .describe('credit indicates somebody owes you the liability. debit Indicates you owe this debt yourself. Works only for liabilities.'),
+        interest: z.string().describe('Mandatory when type is liability. Interest percentage.'),
+        interest_period: z
+          .enum([ 'daily', 'weekly', 'monthly', 'quarterly', 'half-year', 'yearly' ])
+          .optional()
+          .describe('Mandatory when type is liability. Period over which the interest is calculated.')
         opening_balance: z.string().optional().describe('Opening balance as a number string'),
         opening_balance_date: dateSchema.optional().describe('Opening balance date (YYYY-MM-DD)'),
         include_net_worth: z.boolean().optional().describe('Include in net worth calculations'),
